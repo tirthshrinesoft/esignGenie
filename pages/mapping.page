@@ -1,0 +1,108 @@
+<apex:page controller="mappingController">
+    <style>
+        body{
+        	font-size:12px;
+        	font-weight:normal;
+        }
+        .labelCol:first-child{
+        	width:11% !important;
+        	padding-right:29px !important;
+        }
+    </style>
+    <apex:form >
+        <apex:pageBlock title="Data Mapping Edit Information">
+            <div id="showJSMsg" style="display:none;color:red;font-size:12px;">
+                
+            </div>
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Save" action="{!saveData}" onclick="return checkAllData();"/>
+                <apex:commandButton value="Cancel" onclick="return cancelBtnFunction();" />
+            </apex:pageBlockButtons>
+            <apex:pageBlock title="Mapping Information">
+                <apex:pageBlockSection columns="2" collapsible="false">
+                	<apex:pageBlockSectionItem >
+                        Mapping Name : <apex:inputText id="mapname" value="{!mappingName}" style="margin-left:15px;"/>
+                    </apex:pageBlockSectionItem>
+                    <!-- <apex:pageBlockSectionItem >
+                        Folder Name : <apex:inputText id="fldrname" value="{!folderName}" style="margin-left:15px;"/>
+                    </apex:pageBlockSectionItem>  -->
+                </apex:pageBlockSection>
+                
+            </apex:pageBlock>
+            <apex:pageBlock title="Template Selection">
+                <apex:pageBlockSection columns="2" collapsible="false">
+                    <apex:pageBlockSectionItem >
+                        Template Name :
+                        <apex:selectList value="{!templateName}" size="1" id="tempname" style="margin-left:15px;">
+                            <apex:selectOption itemValue="0" itemLabel="Select Value"/>
+                            <apex:selectOptions value="{!TemplatesName}" /> 
+                        </apex:selectList>
+                        <!-- Template Name : <apex:inputText id="tempname" value="{!templateName}" />  -->
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        Select Salesforce Master Object : 
+                        <apex:selectList id="objname" value="{!parentObjName}" size="1" onChange="setObjName(this.value)"> 
+                            <apex:selectOption itemValue="0" itemLabel="Select Value"/>
+                            <apex:selectOptions value="{!ParentObjct}" /> 
+                        </apex:selectList>
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>                
+            </apex:pageBlock>
+            <apex:pageBlock title="Form Fields To Map">
+                Copy from existing mapping : 
+                <apex:selectList value="{!exstMap}" size="1" id="exstMap" style="margin-left:15px;">
+                    <apex:selectOption itemValue="0" itemLabel="Select Value"/>
+                    <apex:selectOptions value="{!Fields}" /> 
+                </apex:selectList>
+            </apex:pageBlock>            
+        </apex:pageBlock> 
+        <apex:actionFunction action="{!changeFieldValues}" name="fillExstMappingName" rerender="exstMap" >
+            <apex:param name="index" assignTo="{!slctedPrntObjVal}" value=""/>
+        </apex:actionFunction>
+    </apex:form>
+    <apex:includeScript value="{!URLFOR($Resource.esignJS, 'jquery-1.9.1.js')}" />
+    <script>
+        function setObjName(prntObj){
+        	console.log(prntObj);
+        	fillExstMappingName(prntObj);
+        	return false;
+        }
+        function checkAllData(){
+        	var errMsg = 'Error : <br/>';
+        	var mapName = $("[id*='mapname']").val();
+            //var fldrName = $("[id*='fldrname']").val();
+        	var tempName = $("[id*='tempname']").val();
+        	var prntObj = $("[id*='objname']").val();
+        
+        	if(mapName == null || mapName == ''){
+        		errMsg += 'Please enter mapping name<br/>';
+        	}
+            /*if(fldrName == null || fldrName == ''){
+        		errMsg += 'Please enter folder name<br/>';
+        	}*/
+        	if(tempName == '0'){
+        		errMsg += 'Please select template name<br/>';
+        	}
+        	if(prntObj == '0'){
+        		errMsg += 'Please select parent object<br/>';
+        	}
+        
+        	if(errMsg.includes('Please')){
+        		document.getElementById('showJSMsg').innerHTML = errMsg;
+        		document.getElementById('showJSMsg').style.display = 'block';
+        		return false;
+        	}
+        	else{
+        		return true;
+        	}        
+        }
+        
+        function cancelBtnFunction(){
+        	var cnfmMsg = confirm("Are you sure want to cancel new mapping ?");
+        	if(cnfmMsg == true){
+            	window.location.href = '/apex/AllMappingName';
+        	}
+        	return false;
+        }
+    </script>
+</apex:page>

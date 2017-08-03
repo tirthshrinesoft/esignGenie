@@ -1,0 +1,14 @@
+<apex:page sidebar="false" showHeader="false">
+    <div id="clsBtn" style="color:Green;position:absolute;left:15%;top:50%;">
+        Your request has been send successfully. <br/> <br/>
+    	<input id="closebtn" type="Submit" Value="Close Window" onclick="closeWindow();" />
+    </div>
+    <Script>
+        
+        function closeWindow(){
+        	window.close();
+        }
+        
+        
+    </Script>
+</apex:page>

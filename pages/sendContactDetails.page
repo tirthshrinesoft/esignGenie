@@ -1,0 +1,296 @@
+<apex:page controller="sendContactDetailsController" sidebar="false" showHeader="false" cache="false">
+    <!-- {!$User.UIThemeDisplayed} -->
+    <apex:form >
+        <apex:pageBlock rendered="{!isUserError}">
+            <div style="color:red;font-size:12px;">
+                Salesforce user email is not setup as a sender in your eSign Genie account. <br/>
+                <apex:commandButton value="Close" onclick="javascript:CancelButton()"/>
+            </div>
+        </apex:pageBlock>
+        <apex:pageBlock rendered="{!isMappingAvlbl}">
+            <div style="color:green;font-size:12px;">
+                Please create at least one mapping for this object. <br/>
+                <apex:commandButton value="Close" onclick="javascript:CancelButton()"/>
+            </div>
+        </apex:pageBlock>
+        <apex:pageBlock rendered="{!isPrflAccess}">
+            <div style="color:green;font-size:12px;">
+                No mapping is available.Please contact administrator. <br/>
+                <apex:commandButton value="Close" onclick="javascript:CancelButton()"/>
+            </div>
+        </apex:pageBlock>
+        <apex:pageBlock rendered="{! AND(not(isMappingAvlbl),not(isPrflAccess),not(isUserError))}">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Send" action="{!sendDataDirect}" onclick="return checkFormData();"  />
+                <apex:commandButton value="Sign and Send" action="{!signAndSend}" onclick="return checkFormData();" />
+                <apex:commandButton value="Preview and Send" action="{!displayPreview}" onclick="return checkFormData();"/>
+                <apex:commandButton value="Cancel" onclick="javascript:CancelButton()" rendered="{!$User.UIThemeDisplayed == 'Theme3' || $User.UIThemeDisplayed == 'Theme2' || $User.UIThemeDisplayed == 'Theme1'}" />
+                <apex:commandButton value="Cancel" action="{!lighteningRedirect}" rendered="{!$User.UIThemeDisplayed == 'Theme4d'}" />
+            </apex:pageBlockButtons>
+            
+            <div id="showJSMsg" style="display:none;color:red;font-size:12px;">                
+            </div>
+            
+            <apex:inputHidden id="embedUrl" value="{!embedUrl}" />
+            <apex:inputHidden id="embedPrvwUrl" value="{!embedPrvwUrl}" />
+            <apex:pageBlock title="Mapping Details">
+                Document Mapping : 
+                <apex:selectList value="{!slctTemPlateName}" multiselect="true" id="mapname" style="margin-left:15px;" onchange="getMulValues(this);"> 
+                    <apex:selectOptions value="{!MappingName}" /> 
+                </apex:selectList>
+                <br/>
+                <br/>
+                Folder Name :
+                <apex:inputText value="{!folderName}" id="fldrname" style="margin-left:50px;width:21%" />
+                <br/>
+                <br/>
+                Enforce Sequence :
+                <apex:inputCheckbox value="{!signInSequence}" style="margin-left:20px;"/>
+            </apex:pageBlock>
+            <apex:pageBlock title="Enter Party Details">
+                <apex:pageBlock title="Select existing Entity">
+                    <apex:selectList size="1" id="objNames" onchange="openPopUp();">
+                        <apex:selectOption itemValue="0" itemLabel="Select Existing Entity"/>
+                        <apex:selectOption itemValue="Contact" itemLabel="Contact"/>
+                        <apex:selectOption itemValue="User" itemLabel="User"/>
+                        <apex:selectOption itemValue="Lead" itemLabel="Lead"/>
+                    </apex:selectList>
+                </apex:pageBlock>
+                <apex:pageBlock id="mappingCols">
+                    <div style="color:red;font-size:12px;">
+                        {!errDisplayMsg}
+                    </div>
+                    
+                    <apex:variable value="{!0}" var="index" />
+                    <apex:pageBlockTable value="{!lstParties}" var="prtyObj">
+                        <apex:column headerValue="No">
+                            <apex:outputText >                            
+                                {!index + 1}
+                            </apex:outputText>
+                        </apex:column>
+                        <apex:column headerValue="First Name">
+                            <apex:inputText value="{!prtyObj.firstName}" styleClass="fName" style="width:80%;" />
+                        </apex:column>
+                        <apex:column headerValue="Last Name">
+                            <apex:inputText value="{!prtyObj.lastName}" styleClass="lName" style="width:80%;" />
+                        </apex:column>
+                        <apex:column headerValue="Email">
+                            <apex:inputText value="{!prtyObj.emailId}" styleClass="email" style="width:80%;" />
+                        </apex:column>
+                        <apex:column headerValue="Fill Out Fields and Sign">
+                            <apex:selectList value="{!prtyObj.permission}" multiselect="false" size="1" styleClass="signClass" style="width:80%;">
+                                <apex:selectOptions value="{!AccessLevel}"/>
+                            </apex:selectList>
+                            <!-- <apex:inputcheckbox value="{!prtyObj.canSign}" styleClass="signClass" />
+<apex:inputText value="{!prtyObj.canSign}"  /> -->
+                        </apex:column>
+                        <apex:column headerValue="Action">
+                            <a href="#" onclick="deleteRow(this)">Delete</a>
+                            <apex:variable value="{!index + 1}" var="index" />
+                        </apex:column>
+                    </apex:pageBlockTable>
+                    <apex:commandLink value="Add Row" action="{!addRow}" reRender="mappingCols"/>
+                </apex:pageBlock>
+            </apex:pageBlock>
+        </apex:pageBlock>
+        
+        <apex:actionFunction action="{!deleteRow}" name="deleteRowFromTable" rerender="mappingCols" >
+            <apex:param name="index" assignTo="{!rowNo}" value=""/>
+        </apex:actionFunction>
+        
+        <apex:actionFunction action="{!searchObjectData}" name="searchData1" reRender="srrslt">            
+            <apex:param name="index1" assignTo="{!searchObjName}" value=""/>
+            <apex:param name="index" assignTo="{!searchName}" value=""/>
+        </apex:actionFunction>
+        
+        <apex:actionFunction action="{!displayPartyData}" name="partyData" reRender="mappingCols">
+            <apex:param name="index" assignTo="{!lstSearchSelectedResult}" value=""/>
+        </apex:actionFunction>
+        
+        <br/>
+        
+        <div id="searchForm" style="display:none;">
+            <br/>
+            <center style="font-size:16px;font-weight:bold;" id="hdr"></center>
+            <br/>
+            <br/>
+            <apex:inputText id="searchname" html-placeholder="Enter Name "/>
+            <apex:commandButton value="Search" onclick="return searchData();" style="margin-left:10px;" />
+            <br/><br/>
+            <apex:selectList size="4" multiselect="false" id="srrslt" style="width:50%;">
+                <apex:selectOptions value="{!SearchResult}" /> 
+            </apex:selectList>
+            <br/><br/>
+            <apex:commandButton value="OK" onclick="return fillPartyData();" />
+            <apex:commandButton value="Cancel" onclick="return closePopUp();" style="margin-left:10px;"/>
+        </div>
+        <apex:actionFunction action="{!changeNumOfParties}" name="changeDropDownVal" reRender="mappingCols,fldrname" >
+            <apex:param name="index" value=""/>
+        </apex:actionFunction>
+    </apex:form>
+    
+    <apex:includeScript value="{!URLFOR($Resource.esignJS, 'jquery-1.9.1.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.esignJS, 'blockui.js')}" />
+    
+    <script>
+    function deleteRow(rowNum) {
+        deleteRowFromTable(rowNum.parentNode.parentNode.rowIndex);
+    }
+    
+    function checkFormData(){
+        console.log('Max PArties ' + {!maxNoOfParties});
+        
+        
+        document.getElementById('showJSMsg').style.display = 'none';
+        var errMsg = 'Errors : <br/>';
+        var mapNames = $("[id*='mapname']").val();
+        if(mapNames == null){
+            errMsg += 'Please select at least one mapping name. <br/>';
+        }
+        var fldrName = $("[id*='fldrname']").val();
+        if(fldrName == null || fldrName == ''){
+            errMsg += 'Please enter folder name<br/>';
+        }
+        var firstName = document.getElementsByClassName("fName");
+        if(firstName == 'undefined'){
+            errMsg += 'Please add row in table ';
+            return false;
+        }
+        
+        var anyBlankRow = 'false';
+        var lastValueRow = 0;
+        
+        var lastName = document.getElementsByClassName('lName');
+        var email = document.getElementsByClassName('email');
+        var canSign = document.getElementsByClassName('signClass');
+        var numOfCheckedBox = 0;
+        
+        for(var i=0;i<firstName.length;i++){
+            if((firstName[i].value == null || firstName[i].value == '') && (lastName[i].value == null || lastName[i].value == '') && (email[i].value == null || email[i].value == '')){
+                anyBlankRow = 'true';
+                // errMsg += 'Please write value in field first name  textbox in Row No : ' + (i+1) + '<br/>';
+            }else{
+                lastValueRow = i;
+            }
+        }
+        
+        for(var l=0;l<= lastValueRow;l++){
+            if(firstName[l].value == null || firstName[l].value == ''){
+                errMsg += 'Please write value in field first name textbox in Row No : ' + (l+1) + '<br/>';
+            }
+        }
+        
+        
+        for(var j=0;j<=lastValueRow;j++){
+            if(lastName[j].value == null || lastName[j].value == ''){
+                errMsg += 'Please write value in field last name textbox in Row No : ' + (j+1) + '<br/>';
+            }
+        }
+        
+        
+        for(var k=0;k<=lastValueRow;k++){
+            if(email[k].value == null || email[k].value == ''){
+                errMsg += 'Please write value in field email textbox in Row No : ' + (k+1) + '<br/>';
+            }
+        }
+        
+        for(var l=0;l<=lastValueRow;l++){
+            console.log(canSign[l].value);            
+            if(canSign[l].value ==  'FILL_FIELDS_AND_SIGN'){                
+                numOfCheckedBox++;                
+            }
+        }
+        
+        //if(numOfCheckedBox == 0 || numOfCheckedBox != {!maxNoOfParties}){
+        if(numOfCheckedBox == 0){
+            errMsg += 'Please select minimum one signer to Fill and Sign option';
+        }
+        
+        
+        if(errMsg.includes('Please')){
+            document.getElementById('showJSMsg').innerHTML = errMsg;
+            document.getElementById('showJSMsg').style.display = 'block';
+            return false;
+        }
+        else{
+            return true;
+        }
+    }
+    
+    var retUrlArray;
+    var retUrl;
+    window.onload = function(){
+        if({!isSuccess} && ($("[id*='embedUrl']").val() == null || $("[id*='embedUrl']").val() == '') && ($("[id*='embedPrvwUrl']").val() == null || $("[id*='embedPrvwUrl']").val() == '')){
+            alert('Document has been sent successfully');
+            window.close();
+        }
+        if({!not(isMappingAvlbl)}){
+            var embedUrl = $("[id*='embedUrl']").val();
+            var embedPrvwUrl = $("[id*='embedPrvwUrl']").val();
+            if(embedUrl != ''){
+                var myWindow = window.open(embedUrl, "_self", "width=800,height=500");
+            }
+            if(embedPrvwUrl != ''){
+                var myWindow = window.open(embedPrvwUrl, "_self", "width=800,height=500");
+            }
+        }               
+    }
+    
+    
+    
+    function searchData(){
+        var errMsg = 'Errors : <br/>';
+        var objNames = $("[id*='objNames']").val();
+        var searchStr = $("[id*='searchname']").val();
+        if(objNames == '0'){
+            errMsg += 'Please select object name from drop down';
+        }
+        
+        if(errMsg.includes('Please')){
+            document.getElementById('showJSMsg').innerHTML = errMsg;
+            document.getElementById('showJSMsg').style.display = 'block';
+        }else{
+            searchData1(objNames,searchStr);
+        } 
+        return false;
+    }
+    
+    function fillPartyData(){
+        if($("[id*='srrslt']").val() == null || $("[id*='srrslt']").val() == ''){
+            $.unblockUI();
+            $("[id*='objNames']").val('0');
+            return false;
+        }
+        partyData($("[id*='srrslt']").val());
+        $("[id*='searchname']").val('');
+        $("[id*='srrslt']").empty();
+        $.unblockUI();
+        $("[id*='objNames']").val('0');
+        return false;
+    }
+    
+    function openPopUp(){
+        var objNames = $("[id*='objNames']").val();             
+        if(objNames != '0'){
+            $("[id*='hdr']").html('Search '+objNames);
+            $.blockUI({ message: $('#searchForm'), css: { width: '475px',height:'250px'} });
+        }
+        
+    }
+    
+    function closePopUp(){
+        $("[id*='searchname']").val('');
+        $("[id*='srrslt']").empty();
+        $.unblockUI();
+        $("[id*='objNames']").val('0');
+    }
+    
+    function getMulValues(el){
+        changeDropDownVal();
+    }
+    
+    function CancelButton(){
+        window.top.close();
+    }
+    </script>
+</apex:page>

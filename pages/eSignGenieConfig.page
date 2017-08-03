@@ -1,0 +1,30 @@
+<apex:page controller="eSignGenieConfigController">
+    <apex:pageBlock title="eSign Genie Configration">
+        <apex:pageBlock >
+            <apex:form >
+                eSign Genie Connect : 
+                <apex:commandButton value="Connect" rendered="{!showConnectBtn}" onclick="return getAccessToken('{!eSignGenieConfigObj.eSign_Genie_URL__c}','{!eSignGenieConfigObj.Client_ID__c}')" />
+                <apex:commandButton value="Disconnect" rendered="{!not(showConnectBtn)}" action="{!removeAccessToken}" />
+            </apex:form>            
+        </apex:pageBlock>
+    </apex:pageBlock>
+    <script>
+        function getAccessToken(goUrl,clntId) {
+            //console.log(goUrl + '?client_id=' + clntId + '&redirect_uri=https://esigngenie.ap4.visual.force.com/apex/eSignGenieGetAccessToken&scope=read-write&response_type=code&state=state');
+            console.log('Host Name' + location.hostname);
+            var new_window = window.open(goUrl + '?client_id=' + clntId + '&redirect_uri='+location.protocol +'//' +location.hostname+'/apex/eSignGenieGetAccessToken&scope=read-write&response_type=code&state=state', "_blank", "toolbar=yes,scrollbars=yes,resizable=yes,top=500,left=500,width=400,height=400");
+            
+            var timer = setInterval(function() {   
+                if(new_window.closed) {  
+                    clearInterval(timer);
+                    window.location.reload();
+                }  
+            }, 1000);
+            return false;
+        }
+        
+        function refreshPage(){
+            location.reload(true);
+        }
+    </script>
+</apex:page>

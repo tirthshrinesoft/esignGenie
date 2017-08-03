@@ -1,0 +1,19 @@
+<apex:page controller="DisplayDocumentPageController" sidebar="false" showHeader="false">
+    <apex:form >
+        <apex:inputHidden id="fdlrAccssUrl" value="{!foldrAccssUrl}" />
+    </apex:form>
+    
+    <apex:includeScript value="{!URLFOR($Resource.esignJS, 'jquery-1.9.1.js')}" />
+    <script>
+        window.onload = function(){
+              setTimeout(openTemplate,500);         
+        }
+        
+        function openTemplate(){
+            var fdlrAccssUrl = $("[id*='fdlrAccssUrl']").val();
+            if(fdlrAccssUrl != ''){
+                var myWindow = window.open(fdlrAccssUrl, "_self", "width=800,height=500");
+            }
+        }
+    </script>
+</apex:page>

@@ -1,0 +1,214 @@
+<apex:page controller="mapingStep1Controller">    
+    <apex:pageBlock rendered="{!showRefrshMsg}">
+        <div style="color:green;font-size:12px;">
+            Your mapping has been updated successfully.
+        </div>
+    </apex:pageBlock>
+    <apex:pageBlock rendered="{!showSucMsg}">
+        <div style="color:green;font-size:12px;">
+            Your mapping has been saved successfully.
+        </div>
+    </apex:pageBlock>
+    <apex:pageBlock rendered="{!showMappingErrMsg}">
+        <div style="color:red;font-size:12px;">
+            {!showMappingErr}
+        </div>
+    </apex:pageBlock>
+    <apex:form >
+        <apex:pageBlock title="Mapping">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Save" action="{!saveData}" onclick="return checkFormData();" />
+                <apex:commandButton value="Cancel" onclick="return cancelBtn();" />
+                <apex:commandButton value="Refresh Template" action="{!refreshTemplateDetails}" />
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection title="Mapping Details" columns="2" collapsible="false"  >
+                <apex:pageBlockSectionItem >
+                    Mapping Name : 
+                </apex:pageBlockSectionItem>                    
+                <apex:pageBlockSectionItem >
+                    {!mapParObj.Mapping_Name__c}
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    Template Name : 
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    {!mapParObj.Template_File_Name__c}
+                </apex:pageBlockSectionItem>
+                <!-- <apex:pageBlockSectionItem >
+                    Folder Name : 
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    {!mapParObj.folder_name__c}
+                </apex:pageBlockSectionItem> -->
+                <apex:pageBlockSectionItem >
+                    Salesforce Object Name : 
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    {!parObjName}
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    Is Default Mapping ? : 
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:inputCheckbox id="dflt" value="{!isDfltMapping}" />
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlock title="Map Data To Object" id="mappingCols">
+                <div id="showJSMsg" style="display:none;color:red;font-size:12px;">
+                    
+                </div>
+                <apex:variable value="{!0}" var="index" />
+                <apex:pageBlockTable id="myTable" value="{!lstMapDataToObj}" var="a">
+                    <apex:column headerValue="No">
+                        <apex:outputText >                            
+                            {!index + 1}
+                        </apex:outputText>
+                    </apex:column>
+                    <apex:column headerValue="Salesforce Object">
+                        <apex:selectList value="{!a.objName}" size="1" onChange="updateField(this)"> 
+                            <apex:selectOptions value="{!ParentObjct}"  /> 
+                        </apex:selectList>
+                    </apex:column>
+                    <apex:column headerValue="Field Names">
+                        <apex:selectList id="objFldVal" value="{!a.objFldName}" styleclass="objFldVal"  required="false" size="1">
+                            <apex:selectOptions value="{!a.fieldOptions}" />
+                        </apex:selectList>
+                    </apex:column>
+                    <apex:column headerValue="eSign Genie Field">
+                        <!-- <apex:inputtext value="{!a.targetFld}" styleClass="tarflds" />  -->
+                        <apex:selectList id="trgFldVal" value="{!a.targetFld}" styleclass="tarflds" size="1">
+                            <apex:selectOptions value="{!TrgtFields}" />
+                        </apex:selectList>
+                    </apex:column>
+                    <apex:column >
+                        <apex:inputcheckbox value="{!a.overWriteExst}"/> Do not overwrite existing
+                    </apex:column>
+                    <apex:column headerValue="Action">
+                        <a href="#" onclick="deleteRow(this)">Delete</a>
+                        <apex:variable value="{!index + 1}" var="index" />
+                    </apex:column>
+                    
+                </apex:pageBlockTable>
+                <apex:commandLink value="Add Row" action="{!addRow}" reRender="mappingCols"/>
+            </apex:pageBlock>
+        </apex:pageBlock>
+        <apex:actionFunction action="{!changeFieldValues}" name="changeDropDownVal" rerender="objFldVal" >
+            <apex:param name="index" assignTo="{!rowNo}" value=""/>
+        </apex:actionFunction>
+        <apex:actionFunction action="{!deleteRow}" name="deleteRowFromTable" rerender="mappingCols" >
+            <apex:param name="index" assignTo="{!rowNo}" value=""/>
+        </apex:actionFunction>
+    </apex:form> 
+    
+    
+    <apex:includeScript value="{!URLFOR($Resource.esignJS, 'jquery-1.9.1.js')}" />
+    <script>
+    function updateField(row) {
+        changeDropDownVal(row.parentNode.parentNode.rowIndex);
+    }
+    
+    function deleteRow(rowNum) {
+        deleteRowFromTable(rowNum.parentNode.parentNode.rowIndex);
+    }
+    
+    function checkFormData(){
+      document.getElementById('showJSMsg').style.display = 'none';
+      var errMsg = 'Errors : <br/>';
+      var selectedFields = document.getElementsByClassName("objFldVal");
+      var targetFields = document.getElementsByClassName('tarflds');
+
+      var anyBlankRow = 'false';
+      var lastValueRow = 0;
+      for(var i=0;i<selectedFields.length;i++) {  
+         if(selectedFields[i].value == '0' && targetFields[i].value == '0')  {
+           anyBlankRow = 'true';
+         }else  {
+           lastValueRow = i;
+         }
+      }
+        console.log('Last row index ::::' + lastValueRow);
+
+      for(var i=0;i <= lastValueRow ;i++) {
+          if(selectedFields[i].value == '0'){
+              errMsg += 'Please select value in field name drop down in Row No : ' + (i+1) + '<br/>';
+          }
+      }     
+      
+      var targetFieldValues = [];
+      for(var j=0;j <= lastValueRow ;j++){
+          if(targetFields[j].value == '0'){
+              errMsg += 'Please enter value in target field textbox in Row No : ' + (j+1) + '<br/>';
+          }else{
+              targetFieldValues.push(targetFields[j].value);
+          }          
+      }    
+
+
+      for(var k=0;k <= lastValueRow;k++){
+          for(var l=k+1;l <= lastValueRow ;l++){
+              if(targetFields[l].value != '0' && targetFields[k].value != null && targetFields[k].value != '' && targetFields[l].value.toUpperCase() == targetFields[k].value.toUpperCase()){
+                  errMsg += 'Please don`t enter duplicate value in target field of Row No :' + (k+1) + ' and Row No : ' + (l+1) + '<br/>';
+              }
+          }
+      }
+      
+      if(errMsg.includes('Please')){
+          document.getElementById('showJSMsg').innerHTML = errMsg;
+          document.getElementById('showJSMsg').style.display = 'block';
+          return false;
+      }
+      else{
+          return true;
+      }
+  }
+    /*function checkFormData(){
+        var errMsg = 'Errors : <br/>';
+        var selectedFields = document.getElementsByClassName("objFldVal");
+        
+         for(var i=0;i<selectedFields.length;i++){
+             console.log('Values is : '+selectedFields[i].value);
+             if(selectedFields[i].value == '0'){
+                errMsg += 'Please select value in field name drop down in Row No : ' + (i+1) + '<br/>';
+            }
+         }
+        
+        var targetFields = document.getElementsByClassName('tarflds');
+        var targetFieldValues = [];
+        for(var j=0;j<targetFields.length;j++){
+            if(targetFields[j].value == null || targetFields[j].value == ''){
+                errMsg += 'Please enter value in target field textbox in Row No : ' + (j+1) + '<br/>';
+            }else{
+                targetFieldValues.push(targetFields[j].value);
+            }
+            
+        }
+        
+        for(var k=0;k<targetFieldValues.length;k++){
+            for(var l=k+1;l<targetFieldValues.length;l++){
+                if(targetFields[l].value.toUpperCase() == targetFields[k].value.toUpperCase()){
+                    errMsg += 'Please don`t enter duplicate value in target field of Row No :' + (k+1) + ' and Row No :' + (l+1) + '<br/>';
+                }
+            }
+        }
+        
+        if(errMsg.includes('Please')){
+            document.getElementById('showJSMsg').innerHTML = errMsg;
+            document.getElementById('showJSMsg').style.display = 'block';
+            return false;
+        }
+        else{
+            return true;
+        }
+        return false;
+    }*/
+    
+    function cancelBtn(){
+        var cnfmMsg = confirm("Are you sure want to cancel mapping ?");
+        if(cnfmMsg == true){
+            window.location.href = '/apex/AllMappingName';
+        }
+        return false;
+    }
+    
+    </script>
+</apex:page>

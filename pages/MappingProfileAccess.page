@@ -1,0 +1,35 @@
+<apex:page controller="MappingProfileAccessController">
+    <apex:form >
+        <apex:pageBlock rendered="{!showSucMsg}">
+        	<div style="color:green;font-size:12px;">
+        		Your profile access for mappings has been saved successfully.
+        	</div>
+    	</apex:pageBlock>
+        <apex:pageBlock rendered="{!isMappingAvlbl}">
+            No mapping Available.
+        </apex:pageBlock>
+        <apex:pageBlock rendered="{! not(isMappingAvlbl)}">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Save" action="{!saveData}"/>
+                <apex:commandButton value="Cancel"  />
+            </apex:pageBlockButtons>
+            <apex:variable value="{!0}" var="index" />
+            <apex:pageBlockTable id="myTable" value="{!lstPrflWrapper}" var="a">
+                <apex:column headerValue="No">
+                    <apex:outputText >                            
+                        {!index + 1}
+                    </apex:outputText>
+                    <apex:variable value="{!index + 1}" var="index" />
+                </apex:column>
+                <apex:column headerValue="Mapping Name">
+                    {!a.mapName}
+                </apex:column>
+                <apex:column headerValue="Profile Names">
+                    <apex:selectList id="objFldVal" value="{!a.slctdProfiles}" styleclass="objFldVal"  multiselect="true" size="10">
+                        <apex:selectOptions value="{!Profiles}" />
+                    </apex:selectList>
+                </apex:column>
+            </apex:pageBlockTable>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

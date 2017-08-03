@@ -1,0 +1,57 @@
+<apex:page controller="AddButtonToCustmObjsController">
+    <apex:form >
+        <apex:pageBlock rendered="{!lstObjDtls.size == 0}">
+            No more custom object present in system.
+        </apex:pageBlock>
+        <apex:pageBlock title="Custom Objects">
+            <apex:pageBlock rendered="{!succmsg}">
+                <p style="color:Green;font-size:12px;">
+                    Button and fields has been added in selected Object successfully.
+                </p> 
+            </apex:pageBlock>
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Save" action="{!saveData}" onclick="return checkData();" />
+                <apex:commandButton value="Reset" onclick="return cancelBtn();" />
+            </apex:pageBlockButtons>
+            
+            <!-- <apex:repeat value="{!mapObjNameToWrpr}" var="objName">  -->
+            <apex:pageBlockSection title="Object Names" columns="2" collapsible="false" rendered="{!lstObjDtls.size > 0}">                
+                <apex:repeat value="{!lstObjDtls}" var="lname">                	                	
+                    <apex:pageBlockSectionItem >
+                        {!lname.objLabel}
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:inputCheckbox id="isadd" value="{!lname.isBtnAdd}" disabled="{!IF(lname.isBtnAdd ==true,true,false)}"/>
+                    </apex:pageBlockSectionItem>
+                </apex:repeat>
+            </apex:pageBlockSection>
+            <!-- </apex:repeat> -->           
+        </apex:pageBlock>
+    </apex:form>
+    <apex:includeScript value="{!URLFOR($Resource.esignJS, 'jquery-1.9.1.js')}" />
+    <script>
+    function checkData(){
+        var count = 0;
+        //console.log ($("[id*='isadd']").prop('checked'));
+        $("[id*='isadd']").each(function(){
+            console.log($(this).prop('checked'));
+            if ($(this).prop('checked') == true){ 
+                count += 1;
+            }
+        });
+        if(count == 0){
+            alert('Select at least one checkbox');
+            return false;
+        }
+        return true;
+    }
+    
+    function cancelBtn(){
+        var cnfmMsg = confirm("Are you sure want to reset selected objects ?");
+        if(cnfmMsg == true){
+            window.location.reload();
+        }
+        return false;
+    }
+    </script>
+</apex:page>

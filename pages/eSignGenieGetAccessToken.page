@@ -1,0 +1,28 @@
+<apex:page controller="eSignGenieGetAccessTokenController" action="{!storeAccessToken}" showHeader="false" sidebar="false">
+    <div id="wait" style="Font-size:15px;">
+        Please wait................
+    </div>
+    <div id="clsBtn" style="display:none;color:red;position:absolute;left:15%;top:50%;">
+        Your account has been successfully connected to eSign Genie and you and other authorized team members can get documents esigned directly from Slaesforce App. <br/> <br/>
+    	<input id="closebtn" type="Submit" Value="Close Window" onclick="closeWindow();" />
+    </div>
+    
+    <Script>
+         window.onload = function(){
+        	setTimeout(function() {
+        		hidenShow(); 
+        	}, 10000);
+        };
+        
+        function hidenShow(){
+        	document.getElementById('wait').style.display = 'none';
+          	document.getElementById('clsBtn').style.display = 'block';
+        }
+        
+        function closeWindow(){
+        	window.close();
+        }
+        
+        
+    </Script>
+</apex:page>

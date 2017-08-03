@@ -1,0 +1,113 @@
+<apex:page controller="AllMappingNameController" >
+    <apex:form >
+        <apex:pageBlock id="actvMap" title="All Mappings">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="New Mapping" action="{!goToCreateMapping}" />
+            </apex:pageBlockButtons>
+            <apex:pageBlock title="Active Mappings">                
+                <apex:variable value="{!0}" var="index" />
+                <apex:pageBlockTable value="{!lstActiveMapping}" var="am">
+                    <apex:column headerValue="No">
+                        <apex:outputText >                            
+                            {!index + 1}
+                        </apex:outputText>
+                    </apex:column>
+                    <apex:column headerValue="Action">
+                        <a href="/apex/mappingstep1?mapId={!am.Id}&exstMapId={!am.id}">Edit</a>
+                    </apex:column>
+                    <apex:column headerValue="Deactivation">
+                        <a href="#" onclick="mappingDeactive('{!am.Id}',{!index})">Disable</a>
+                        <!-- <apex:commandLink value="Deactive" onclick="mappingDeactive('{!am.Id}',{!index})" /> -->
+                    </apex:column>
+                    <apex:column headerValue="Mapping Name">
+                        <apex:outputText >
+                            {!am.Mapping_Name__c}
+                        </apex:outputText>
+                    </apex:column>
+                    <apex:column headerValue="Template Name">
+                        <apex:outputText >
+                            {!am.Template_File_Name__c}
+                        </apex:outputText>
+                    </apex:column>
+                    <apex:column headerValue="Parent Object Name">
+                        <apex:outputText >
+                            {! mapObjLabelToName[am.Parent_Obj_Name__c]}
+                        </apex:outputText>
+                        <!-- <apex:variable value="{!index + 1}" var="index" /> -->
+                    </apex:column>
+                    <apex:column headerValue="Is Default Mapping">
+                        <apex:outputText >
+                            {! if(am.Is_Default_Mapping__c==true,'Yes','No')}
+                        </apex:outputText>
+                        <apex:variable value="{!index + 1}" var="index" />
+                    </apex:column>
+                </apex:pageBlockTable>
+            </apex:pageBlock>
+            
+            <apex:pageBlock title="Deactive Mappings">
+                <apex:variable value="{!0}" var="index" />
+                <apex:pageBlockTable value="{!lstDeActiveMapping}" var="am">
+                    <apex:column headerValue="No">
+                        <apex:outputText >                            
+                            {!index + 1}
+                        </apex:outputText>
+                    </apex:column>
+                    <apex:column headerValue="Action">
+                        <a href="#" onclick="deleteMapping('{!am.Id}',{!index})">Delete</a>
+                        <!-- <apex:commandLink value="Active" onclick="mappingActive('{!am.Id}',{!index})" /> -->
+                    </apex:column>
+                    <apex:column headerValue="Activation">
+                        <a href="#" onclick="mappingActive('{!am.Id}',{!index})">Enable</a>
+                        <!-- <apex:commandLink value="Active" onclick="mappingActive('{!am.Id}',{!index})" /> -->
+                    </apex:column>
+                    <apex:column headerValue="Mapping Name">
+                        <apex:outputText >
+                            {!am.Mapping_Name__c}
+                        </apex:outputText>
+                    </apex:column>
+                    <apex:column headerValue="Template Name">
+                        <apex:outputText >
+                            {!am.Template_File_Name__c}
+                        </apex:outputText>
+                    </apex:column>
+                    <apex:column headerValue="Parent Object Name">
+                        <apex:outputText >
+                            {! mapObjLabelToName[am.Parent_Obj_Name__c]}
+                        </apex:outputText>
+                        <apex:variable value="{!index + 1}" var="index" />
+                    </apex:column>
+                </apex:pageBlockTable>
+            </apex:pageBlock>
+            <apex:actionFunction action="{!deactiveMapping}" name="deactiveMapping" rerender="actvMap" >
+                <apex:param name="index" assignTo="{!mapId}" value=""/>
+                <apex:param name="rowNo" assignTo="{!rowNo}" value=""/>
+            </apex:actionFunction>
+            <apex:actionFunction action="{!activeMapping}" name="activeMapping" rerender="actvMap" >
+                <apex:param name="index" assignTo="{!mapId}" value=""/>
+                <apex:param name="rowNo" assignTo="{!rowNo}" value=""/>
+            </apex:actionFunction>
+            <apex:actionFunction action="{!deleteMapping}" name="deleteMapping" rerender="actvMap" >
+                <apex:param name="index" assignTo="{!mapId}" value=""/>
+                <apex:param name="rowNo" assignTo="{!rowNo}" value=""/>
+            </apex:actionFunction>
+        </apex:pageBlock>        
+    </apex:form>
+    <script>
+    function mappingDeactive(mappingId,indexNo){
+        deactiveMapping(mappingId,indexNo);
+        return false;
+    }
+    
+    function mappingActive(mappingId,indexNo){
+        activeMapping(mappingId,indexNo);
+        window.location.reload();
+        return false;
+    }
+    
+    function deleteMapping(mappingId,indexNo){
+        console.log(mappingId);
+        deleteMapping(mappingId,indexNo);
+        return false;
+    }
+    </script>
+</apex:page>
